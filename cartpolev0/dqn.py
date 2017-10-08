@@ -7,7 +7,7 @@ class DQN:
     '''
     DQNのネットワークを定義
     '''
-    def __init__(self, n_l1hidden, n_l2hidden, n_in, n_out, learning_rate=0.01):
+    def __init__(self, n_l1hidden, n_l2hidden, n_in, n_out, learning_rate=0.001):
         '''
         n_in: 入力(ゲームの状態)のノード数
         n_out: 出力(Q(s,a))
@@ -35,7 +35,7 @@ class DQN:
         入力層 -> 隠れ層２ -> 出力層
         '''
         def _weight_variable(shape):
-            initial = tf.truncated_normal(shape, stddev=0.01)
+            initial = tf.truncated_normal(shape, stddev=1)
             return tf.Variable(initial)
 
         def _bias_variable(shape):

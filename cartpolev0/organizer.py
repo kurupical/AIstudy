@@ -19,6 +19,7 @@ class Organizer:
 
         result_ary = []
         timestep = 0
+        total_timestep = 0
         #
         # (1) batch_sizeだけゲームを試行
         #
@@ -26,31 +27,42 @@ class Organizer:
             done = False
             while not done:
                 act = self.agent.policy(state=self.state, env=self.env, isTrain=isTrain)
-                forward_state, _, done, info = self.env.step(act)
+                forward_state, reward, done, info = self.env.step(act)
 
+                total_timestep += 1
+                timestep += 1
+
+                '''
                 if done:
-                    forward_reward = -1
+                    if reward == 1:
+                        print("rew=0/timestep:{}".format(timestep))
+                        forward_reward = -1
+                    else:
+                        print("rew=1/timestep:{}".format(timestep))
+                        forward_reward = 0
                 else:
                     forward_reward = 0
+                '''
+                forward_reward = reward
 
                 # ゲーム経過を記録
                 result_ary.append([self.state, act, self.reward, forward_state, False])
 
                 # 現在の行動を保持する
-                self.now_state = forward_state
-                self.now_reward = forward_reward
+                self.state = forward_state
+                self.reward = forward_reward
                 if not isTrain:
-                    timestep += 1
                     self.env.render()
 
             # ゲーム終了時の状態を記録。(isEndrecord=True)
             result_ary.append([self.state, act, self.reward, forward_state, True])
 
-            self.now_state = self.env.reset()
-            self.now_reward = 0
+            self.state = self.env.reset()
+            self.reward = 0
+            timestep = 0
 
         if not isTrain:
-            print("試行回数:{0}, 平均:{1}".format(batch_size, timestep/batch_size))
+            print("試行回数:{0}, 平均:{1}".format(batch_size, total_timestep/batch_size))
 
         #
         # (2) 1で蓄積したデータをシャッフルし、Q-Tableを更新する
@@ -60,8 +72,9 @@ class Organizer:
             random.shuffle(result_ary)
 
             for ary in result_ary:
-                self.agent.learn(state       = ary[0],
-                                 act         = ary[1],
-                                 reward      = ary[2],
-                                 forward_s   = ary[3],
-                                 isEndRecord = ary[4])
+                val_loss = self.agent.learn(state       = ary[0],
+                                            act         = ary[1],
+                                            reward      = ary[2],
+                                            forward_s   = ary[3],
+                                            isEndRecord = ary[4])
+            return val_loss
