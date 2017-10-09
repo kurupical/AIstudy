@@ -32,18 +32,16 @@ class Organizer:
                 total_timestep += 1
                 timestep += 1
 
-                '''
                 if done:
-                    if reward == 1:
-                        print("rew=0/timestep:{}".format(timestep))
+                    if timestep is not 200:
+                        print("rew=0/timestep:{}, isTrain={}".format(timestep, isTrain))
                         forward_reward = -1
-                    else:
-                        print("rew=1/timestep:{}".format(timestep))
+                    else: # timestep=200の場合、強制的にゲーム終了となる。この場合のrewardは0とする
+                        print("rew=1/timestep:{}, isTrain={}".format(timestep, isTrain))
                         forward_reward = 0
                 else:
                     forward_reward = 0
-                '''
-                forward_reward = reward
+#                forward_reward = reward
 
                 # ゲーム経過を記録
                 result_ary.append([self.state, act, self.reward, forward_state, False])

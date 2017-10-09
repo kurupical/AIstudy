@@ -6,15 +6,17 @@ class Agent:
     '''
     ゲームプレイヤー
     '''
-    def __init__(self, network, gamma=0.9, epsilon=0.2, annealing_rate=0.9995):
+    def __init__(self, network, gamma=0.95, epsilon=0.2, annealing_rate=0.9995, learning_rate=0.001):
         # gamma: 時間割引率
         self.gamma = gamma
         # network: DQNのニューラルネットワーク
         self.network = network
         # epsilon: 探索率ε
         self.epsilon = epsilon
-        # Annealing_Rate: εの低減率(探索ごとに探索率epsilonを低減させる(焼きなまし))
+        # annealing_Rate: εの低減率(探索ごとに探索率epsilonを低減させる(焼きなまし))
         self.annealing_rate = annealing_rate
+        # learning_rate: 学習率。1回の学習でQ-Tableの更新をどれだけ行うか？
+        self.learning_rate = learning_rate
 
     def policy(self, state, env, isTrain):
         '''
@@ -68,7 +70,7 @@ class Agent:
 
         # Excepted Value(期待値) = 現在の報酬(reward) +
         #                         時間割引率(gamma) * 状態forward_stateでmaxのQ値(maxev_Q)
-        ev = reward + self.gamma * maxev_Q
+        ev = reward + self.learning_rate * self.gamma * maxev_Q
 
         # Todo:ミニバッチ処理対応.(1個ずつじゃなく、いっきに学習できるようにする)
         Q = np.array([Q]).reshape(-1, 2)
