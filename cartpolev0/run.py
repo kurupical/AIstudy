@@ -45,7 +45,7 @@ organizer = Organizer(agent=agent,
                       env=env)
 
 for i in range(100):
-    val_loss = organizer.step(isTrain=True, batch_size=100)
+    val_loss = organizer.step(isTrain=True, batch_size=10)
     # print("i={}, val_loss={}".format(i, val_loss))
     organizer.step(isTrain=False, batch_size=10)
 print("end")

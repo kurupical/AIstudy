@@ -2,10 +2,10 @@
   "#networkのパラメータ": "",
   "n_l1hidden": 100,
   "n_l2hidden": 100,
-  "learning_rate_nw": 0.001,
+  "learning_rate_nw": 0.00025,
   "#agentのパラメータ:": "",
   "gamma": 0.95,
   "epsilon": 0.2,
-  "annealing_rate": 0.99,
+  "annealing_rate": 1,
   "learning_rate_ag": 0.01
 }
