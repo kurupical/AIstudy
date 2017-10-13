@@ -1,7 +1,8 @@
 {
+  "title": "test",
   "#networkのパラメータ": "",
-  "n_l1hidden": 100,
-  "n_l2hidden": 100,
+  "n_l1hidden": 200,
+  "n_l2hidden": 200,
   "learning_rate_nw": 0.00025,
   "#agentのパラメータ:": "",
   "gamma": 0.95,

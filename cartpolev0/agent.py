@@ -1,6 +1,8 @@
 # common lib
 import random
 import numpy as np
+import shutil
+import os
 from copy import copy
 
 class Agent:
@@ -43,30 +45,35 @@ class Agent:
           maxev_Q : 状態forward_sで、取れるactionのうちQ値が最大となるactionを選択したときのQ値
                     (maximum Excepted Value of Q)
         '''
-        
-        state = result_ary[:,0]
-        forward_s = result_ary[:,3]
 
-        # Q(s,a)の計算
-        Q = self.network.y.eval(session=self.network.sess, feed_dict={
-                self.network.x: forward_s
-            })
+        state_ary = np.array([[]])
+        Q_ary = np.array([[]])
+        delta_Q_ary = np.array([[]])
+        for state, act, reward, forward_s, isEndRecord in result_ary:
+            state = state.reshape(-1,4)
+            forward_s = forward_s.reshape(-1,4)
 
-        # ev_Qの計算
-        delta_Q = np.array([[]])
-        for q in Q:
-            if isEndRecord:
-                # 最終レコードの場合は、その状態から先に行かない
-                maxev_q = 0
-                maxev_q_idx = [0,1]
-            else:
-                # 状態forward_sに対して、すべてのactionのQ値を計算する
-                pred_q_table = self.network.y.eval(session=self.network.sess, feed_dict={
-                                    self.network.x: forward_s
-                                })
-                # forward_stateで取れるactionのうち、最大となるQ値
-                maxev_q = np.max(pred_q_table)
-                maxev_q_idx = np.argmax(pred_q_table)
+            # Q(s,a)の計算
+            Q = self.network.y.eval(session=self.network.sess, feed_dict={
+                    self.network.x: forward_s
+                })
+
+            # ev_Qの計算
+            delta_Q = np.array([[]])
+
+            for q in Q:
+                if isEndRecord:
+                    # 最終レコードの場合は、その状態から先に行かない
+                    maxev_q = 0
+                    maxev_q_idx = [0,1]
+                else:
+                    # 状態forward_sに対して、すべてのactionのQ値を計算する
+                    pred_q_table = self.network.y.eval(session=self.network.sess, feed_dict={
+                                        self.network.x: forward_s
+                                    })
+                    # forward_stateで取れるactionのうち、最大となるQ値
+                    maxev_q = np.max(pred_q_table)
+                    maxev_q_idx = np.argmax(pred_q_table)
 
                 # Excepted Value(期待値) = 現在の報酬(reward) +
                 #                         時間割引率(gamma) * 状態forward_stateでmaxのQ値(maxev_Q)
@@ -83,16 +90,25 @@ class Agent:
                 else:
                     delta_Q = np.append(delta_Q, delta_q, axis=0)
 
+                if state_ary.size == 0:
+                    state_ary = np.array(state)
+                    Q_ary = np.array(Q)
+                    delta_Q_ary = np.array(delta_Q)
+                else:
+                    state_ary = np.append(state_ary, state, axis=0)
+                    Q_ary = np.append(Q_ary, Q, axis=0)
+                    delta_Q_ary = np.append(delta_Q_ary, delta_Q, axis=0)
+
         self.network.sess.run(self.network.train_step, feed_dict={
-            self.network.x: state,
-            self.network.y: Q,
-            self.network.t: delta_Q
+            self.network.x: state_ary,
+            self.network.y: Q_ary,
+            self.network.t: delta_Q_ary
         })
 
         val_loss = self.network.loss.eval(session=self.network.sess, feed_dict={
-            self.network.x: state,
-            self.network.y: Q,
-            self.network.t: delta_Q
+            self.network.x: state_ary,
+            self.network.y: Q_ary,
+            self.network.t: delta_Q_ary
         })
 
         return val_loss
@@ -110,3 +126,11 @@ class Agent:
         # Q値が最大となるactionを返す
         # print("state={}, pred_Q_table={}".format(state, pred_Q_table))
         return np.argmax(pred_Q_table)
+
+    def save(self, result_path, config_path):
+        os.mkdir(result_path)
+        # モデルの保存
+        self.network.save(result_path + "model.ckpt")
+        # コンフィグファイルの保存
+        result_config_path = result_path + "config.json"
+        shutil.copy2(config_path, result_config_path)

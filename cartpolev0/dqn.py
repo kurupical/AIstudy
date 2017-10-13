@@ -78,3 +78,9 @@ class DQN:
 
     def _LeakyReLU(self, f, a=0.1):
         return tf.maximum(f, f*a)
+
+    def save(self, path):
+        self.saver.save(self.sess, path)
+
+    def load(self, path):
+        self.saver.restore(self.sess, path)
