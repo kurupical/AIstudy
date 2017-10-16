@@ -12,6 +12,7 @@ class Organizer:
         self.env = env
         self.state = env.reset()
         self.reward = 0
+        self.result_ary = []
         self.result_history = []
 
     def step(self, isTrain, batch_size, isVisualize=True):
@@ -26,7 +27,6 @@ class Organizer:
 
         timestep = 0
         total_timestep = 0
-        result_ary = []
         #
         # (1) batch_sizeだけゲームを試行
         #
@@ -51,7 +51,7 @@ class Organizer:
 #                forward_reward = reward
 
                 # ゲーム経過を記録
-                result_ary.append([self.state, act, self.reward, forward_state, False])
+                self.result_ary.append([self.state, act, self.reward, forward_state, False])
 
                 # 現在の行動を保持する
                 self.state = forward_state
@@ -60,7 +60,7 @@ class Organizer:
                     self.env.render()
 
             # ゲーム終了時の状態を記録。(isEndrecord=True)
-            result_ary.append([self.state, act, self.reward, forward_state, True])
+            self.result_ary.append([self.state, act, self.reward, forward_state, True])
             self.state = self.env.reset()
             self.reward = 0
             timestep = 0
@@ -86,6 +86,7 @@ class Organizer:
                                             isEndRecord = ary[4])
                 pbar.update(1)
             '''
-            random.shuffle(result_ary)
+            random.shuffle(self.result_ary)
+            result_ary = self.result_ary[:batch_size]
             val_loss = self.agent.learn(result_ary)
             return val_loss

@@ -69,7 +69,7 @@ class DQN:
         return mse
 
     def _training(self, loss, learning_rate, beta1=0.9, beta2=0.999):
-        # optimizer = \
+        #optimizer = \
         #     tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=beta1, beta2=beta2)
         optimizer = tf.train.RMSPropOptimizer(learning_rate)
 

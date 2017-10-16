@@ -52,10 +52,10 @@ organizer = Organizer(agent=agent,
 
 # 学習と推論
 val_loss_history = []
-for i in range(5):
-    val_loss = organizer.step(isTrain=True, batch_size=100)
+for i in range(1000):
+    val_loss = organizer.step(isTrain=True, batch_size=1000)
     print("i={}, val_loss={}".format(i, val_loss))
-    organizer.step(isTrain=False, batch_size=10,isVisualize=False)
+    organizer.step(isTrain=False, batch_size=20,isVisualize=False)
     val_loss_history.append(val_loss)
 
 history_count = len(organizer.result_history)
