@@ -59,7 +59,7 @@ organizer = Organizer(agent=agent,
 
 # 学習と推論
 val_loss_history = []
-for i in range(5):
+for i in range(1000):
     train_ave, val_loss = organizer.step(isTrain=True, batch_size=32)
     test_ave = organizer.step(isTrain=False, batch_size=10, isVisualize=False)
     print("i={}, val_loss={:.6f}, average_timestep=[train:{:.2f}, test:{:.2f}]".format(i, val_loss, train_ave, test_ave))
