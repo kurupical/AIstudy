@@ -45,7 +45,7 @@ class Organizer:
                         forward_reward = -1
                     else: # timestep=200の場合、強制的にゲーム終了となる。この場合のrewardは0とする
 #                        print("rew=1/timestep:{}, isTrain={}".format(timestep, isTrain))
-                        forward_reward = 0
+                        forward_reward = 1
                 else:
                     forward_reward = 0
 #                forward_reward = reward
@@ -65,28 +65,23 @@ class Organizer:
             self.reward = 0
             timestep = 0
 
-        if not isTrain:
-            average_timestep = total_timestep/batch_size
-            print("試行回数:{0}, 平均:{1}".format(batch_size, average_timestep))
-            self.result_history.append(average_timestep)
+        average_timestep = total_timestep/batch_size
+        self.result_history.append(average_timestep)
 
         #
         # (2) 1で蓄積したデータをシャッフルし、Q-Tableを更新する
         #
 
         if isTrain:
-            '''
-            print("**********\nlearning_mode\n**********")
-            pbar = tqdm(total=len(result_ary))
-            for ary in result_ary:
-                val_loss = self.agent.learn(state       = ary[0],
-                                            act         = ary[1],
-                                            reward      = ary[2],
-                                            forward_s   = ary[3],
-                                            isEndRecord = ary[4])
-                pbar.update(1)
-            '''
             random.shuffle(self.result_ary)
-            result_ary = self.result_ary[:batch_size]
+
+            # [batch_sizeの10000倍]のデータを保持する
+            if len(self.result_ary) < batch_size * 1000:
+                result_ary = self.result_ary[:batch_size*10]
+            else:
+                self.result_ary = self.result_ary[:batch_size*1000]
+                result_ary = self.result_ary[:batch_size*10]
             val_loss = self.agent.learn(result_ary)
-            return val_loss
+            return average_timestep, val_loss
+        else:
+            return average_timestep

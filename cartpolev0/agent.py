@@ -9,7 +9,7 @@ class Agent:
     '''
     ゲームプレイヤー
     '''
-    def __init__(self, network, gamma=0.95, epsilon=0.2, annealing_rate=0.9995, learning_rate=0.001):
+    def __init__(self, network, gamma=0.95, epsilon=0.2, annealing_rate=0.9995, learning_rate=0.001,min_epsilon=0.1):
         # gamma: 時間割引率
         self.gamma = gamma
         # network: DQNのニューラルネットワーク
@@ -20,6 +20,8 @@ class Agent:
         self.annealing_rate = annealing_rate
         # learning_rate: 学習率。1回の学習でQ-Tableの更新をどれだけ行うか？
         self.learning_rate = learning_rate
+        # min_epsilon: 探索率の最小値ε
+        self.min_epsilon = min_epsilon
 
     def policy(self, state, env, isTrain):
         '''
@@ -35,7 +37,9 @@ class Agent:
             act = self.predict(state)
 
         # epsilon(探索率)を減らす
-        self.epsilon = self.epsilon * self.annealing_rate
+        if self.epsilon > self.min_epsilon:
+            self.epsilon = self.epsilon - self.annealing_rate
+
         return act
 
 #    def learn(self, state, act, reward, forward_s, isEndRecord):
@@ -49,13 +53,17 @@ class Agent:
         state_ary = np.array([[]])
         Q_ary = np.array([[]])
         delta_Q_ary = np.array([[]])
+        # test
+        ix = 0
+        ix_total = 0
+        # test
         for state, act, reward, forward_s, isEndRecord in result_ary:
             state = state.reshape(-1,4)
             forward_s = forward_s.reshape(-1,4)
 
             # Q(s,a)の計算
             Q = self.network.y.eval(session=self.network.sess, feed_dict={
-                    self.network.x: forward_s
+                    self.network.x: state
                 })
 
             # ev_Qの計算
@@ -74,11 +82,14 @@ class Agent:
                     # forward_stateで取れるactionのうち、最大となるQ値
                     maxev_q = np.max(pred_q_table)
                     maxev_q_idx = np.argmax(pred_q_table)
-
-                # Excepted Value(期待値) = 現在の報酬(reward) +
-                #                         時間割引率(gamma) * 状態forward_stateでmaxのQ値(maxev_Q)
+                    # Excepted Value(期待値) = 現在の報酬(reward) +
+                    #                         時間割引率(gamma) * 状態forward_stateでmaxのQ値(maxev_Q)
+                    ev = reward + self.gamma * maxev_q
+                    ix_total += 1
+                    ix += np.argmax(pred_q_table)
                 ev = reward + self.gamma * maxev_q
-
+                if isEndRecord:
+                    print("forward_s={}, pred_q={}, ev={},end?={}".format(forward_s,pred_q_table, ev, isEndRecord))
                 # Todo:ミニバッチ処理対応.(1個ずつじゃなく、いっきに学習できるようにする)
                 q = np.array([q]).reshape(-1, 2)
 
@@ -99,6 +110,7 @@ class Agent:
                     Q_ary = np.append(Q_ary, Q, axis=0)
                     delta_Q_ary = np.append(delta_Q_ary, delta_Q, axis=0)
 
+        print("test: total={}, choose_1={}".format(ix_total,ix))
         self.network.sess.run(self.network.train_step, feed_dict={
             self.network.x: state_ary,
             self.network.y: Q_ary,
@@ -124,8 +136,8 @@ class Agent:
                        })
 
         # Q値が最大となるactionを返す
-        # print("state={}, pred_Q_table={}".format(state, pred_Q_table))
-        return np.argmax(pred_Q_table)
+        # print("state={}, pred_Q_table={}, max_index={}".format(state, pred_Q_table, np.argmax(pred_Q_table[0])))
+        return np.argmax(pred_Q_table[0])
 
     def save(self, result_path, config_path):
         os.mkdir(result_path)

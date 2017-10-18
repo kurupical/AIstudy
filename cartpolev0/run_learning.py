@@ -21,7 +21,7 @@ result_path = "result/" + datetime.datetime.today().strftime("%Y-%m-%d %H:%M:%S"
 env = gym.make('CartPole-v0')
 state = env.reset()
 n_in = state.size
-n_out = 2 # 取れるactionの種類
+n_out = env.action_space.n # 取れるactionの種類
 
 # 各種パラメータの取得
 ## network param
@@ -32,7 +32,6 @@ learning_rate_nw = config['learning_rate_nw']
 gamma = config['gamma']
 epsilon = config['epsilon']
 annealing_rate = config['annealing_rate']
-learning_rate_ag = config['learning_rate_ag']
 
 # 環境構築
 network = DQN(n_l1hidden=n_l1hidden,
@@ -44,18 +43,20 @@ network = DQN(n_l1hidden=n_l1hidden,
 agent = Agent(network=network,
               gamma=gamma,
               epsilon=epsilon,
-              annealing_rate=annealing_rate,
-              learning_rate=learning_rate_ag)
+              annealing_rate=annealing_rate)
 
 organizer = Organizer(agent=agent,
                       env=env)
 
 # 学習と推論
 val_loss_history = []
-for i in range(1000):
-    val_loss = organizer.step(isTrain=True, batch_size=1000)
-    print("i={}, val_loss={}".format(i, val_loss))
-    organizer.step(isTrain=False, batch_size=20,isVisualize=False)
+# train_ave, val_loss = organizer.step(isTrain=True, batch_size=1000)
+for i in range(20000):
+    train_ave, val_loss = organizer.step(isTrain=True, batch_size=32)
+    test_ave = organizer.step(isTrain=False, batch_size=10,isVisualize=False)
+    print("i={}, val_loss={:.6f}, average_timestep=[train:{:.2f}, test:{:.2f}]".format(i, val_loss, train_ave, test_ave))
+    if test_ave >= 195:
+        break
     val_loss_history.append(val_loss)
 
 history_count = len(organizer.result_history)
@@ -78,6 +79,7 @@ plt.xticks(np.linspace(0, history_count, 5, endpoint=False))
 plt.legend([p1, p2], ["timestep", "val_loss"])
 plt.title("cartpole_play")
 plt.show()
+plt.savefig(result_path + "graph.png")
 
 agent.save(result_path, config_path)
 print("end")
