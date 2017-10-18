@@ -52,10 +52,8 @@ agent = Agent(network=network,
 organizer = Organizer(agent=agent,
                       env=env)
 
-for i in range(100):
-    val_loss = organizer.step(isTrain=True, batch_size=100)
-    print("i={}, val_loss={}".format(i, val_loss))
-    organizer.step(isTrain=False, batch_size=10,isVisualize=False)
+test_ave = organizer.step(isTrain=False, batch_size=10,isVisualize=True)
+print("test_ave={}".format(test_ave))
 
 agent.save(result_path, config_path)
 print("end")

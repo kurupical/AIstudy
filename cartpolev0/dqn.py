@@ -35,8 +35,8 @@ class DQN:
         入力層 -> 隠れ層２ -> 出力層
         '''
         def _weight_variable(shape):
-            # initial = tf.truncated_normal(shape, mean=0.0, stddev=1.0)
-            initial = tf.random_uniform(shape, minval=-1, maxval=1)
+            initial = tf.truncated_normal(shape, mean=0.0, stddev=1.0)
+            # initial = tf.random_uniform(shape, minval=-1, maxval=1)
             return tf.Variable(initial)
 
         def _bias_variable(shape):

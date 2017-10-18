@@ -13,7 +13,12 @@ class Organizer:
         self.state = env.reset()
         self.reward = 0
         self.result_ary = []
-        self.result_history = []
+        
+        self.result_history_train = []
+        self.result_history_test = []
+
+        # 前回の平均timestep
+        self.before_ave = 0
 
     def step(self, isTrain, batch_size, isVisualize=True):
         '''
@@ -27,12 +32,14 @@ class Organizer:
 
         timestep = 0
         total_timestep = 0
+        insert_count = 0 # debug用 self.result_aryにappendされた件数
         #
         # (1) batch_sizeだけゲームを試行
         #
-        for _ in range(batch_size):
+        for i in range(batch_size):
             done = False
             while not done:
+                w_result_ary = []
                 act = self.agent.policy(state=self.state, env=self.env, isTrain=isTrain)
                 forward_state, reward, done, info = self.env.step(act)
 
@@ -45,29 +52,46 @@ class Organizer:
                         forward_reward = -1
                     else: # timestep=200の場合、強制的にゲーム終了となる。この場合のrewardは0とする
 #                        print("rew=1/timestep:{}, isTrain={}".format(timestep, isTrain))
-                        forward_reward = 1
+                        forward_reward = 0.005
                 else:
-                    forward_reward = 0
+                    forward_reward = 0.005
 #                forward_reward = reward
 
-                # ゲーム経過を記録
-                self.result_ary.append([self.state, act, self.reward, forward_state, False])
-
+                if isTrain:
+                    # ゲーム経過を記録
+                    w_result_ary.append([self.state, act, self.reward, forward_state, False])
                 # 現在の行動を保持する
                 self.state = forward_state
                 self.reward = forward_reward
+
                 if not isTrain and isVisualize:
                     self.env.render()
 
             # ゲーム終了時の状態を記録。(isEndrecord=True)
-            self.result_ary.append([self.state, act, self.reward, forward_state, True])
+            w_result_ary.append([self.state, act, self.reward, forward_state, True])
+
+            # 成績が前回平均以上のデータは記録する。
+            # それ以外のデータは、一定の確率で記録する。
+            if isTrain:
+                if self.before_ave < timestep or random.random() < 0.2:
+                    for ary in w_result_ary:
+                        self.result_ary.append(ary)
+                        insert_count += 1
+
             self.state = self.env.reset()
             self.reward = 0
             timestep = 0
 
         average_timestep = total_timestep/batch_size
-        self.result_history.append(average_timestep)
+        # average_timestepの記録
+        if isTrain:
+            self.result_history_train.append(average_timestep)
+        else:
+            self.result_history_test.append(average_timestep)
+        if isTrain:
+            self.before_ave = average_timestep
 
+        # print("insert_count={}, result_ary_length={}".format(insert_count, len(self.result_ary)))
         #
         # (2) 1で蓄積したデータをシャッフルし、Q-Tableを更新する
         #
@@ -75,12 +99,12 @@ class Organizer:
         if isTrain:
             random.shuffle(self.result_ary)
 
-            # [batch_sizeの10000倍]のデータを保持する
+            # [batch_sizeの100倍]のデータを保持する
             if len(self.result_ary) < batch_size * 1000:
-                result_ary = self.result_ary[:batch_size*10]
+                result_ary = self.result_ary[:batch_size*30]
             else:
                 self.result_ary = self.result_ary[:batch_size*1000]
-                result_ary = self.result_ary[:batch_size*10]
+                result_ary = self.result_ary[:batch_size*30]
             val_loss = self.agent.learn(result_ary)
             return average_timestep, val_loss
         else:

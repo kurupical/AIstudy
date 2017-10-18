@@ -9,7 +9,7 @@ class Agent:
     '''
     ゲームプレイヤー
     '''
-    def __init__(self, network, gamma=0.95, epsilon=0.2, annealing_rate=0.9995, learning_rate=0.001,min_epsilon=0.1):
+    def __init__(self, network, gamma=0.95, epsilon=0.2, annealing_rate=0.9995, learning_rate=0.001, min_epsilon=0.1):
         # gamma: 時間割引率
         self.gamma = gamma
         # network: DQNのニューラルネットワーク
@@ -35,10 +35,6 @@ class Agent:
                 act = self.predict(state)
         else:
             act = self.predict(state)
-
-        # epsilon(探索率)を減らす
-        if self.epsilon > self.min_epsilon:
-            self.epsilon = self.epsilon - self.annealing_rate
 
         return act
 
@@ -88,8 +84,7 @@ class Agent:
                     ix_total += 1
                     ix += np.argmax(pred_q_table)
                 ev = reward + self.gamma * maxev_q
-                if isEndRecord:
-                    print("forward_s={}, pred_q={}, ev={},end?={}".format(forward_s,pred_q_table, ev, isEndRecord))
+                # print("forward_s={}, pred_q={}, ev={},end?={}".format(forward_s,pred_q_table, ev, isEndRecord))
                 # Todo:ミニバッチ処理対応.(1個ずつじゃなく、いっきに学習できるようにする)
                 q = np.array([q]).reshape(-1, 2)
 
@@ -122,6 +117,10 @@ class Agent:
             self.network.y: Q_ary,
             self.network.t: delta_Q_ary
         })
+
+        # epsilon(探索率)を減らす
+        if self.epsilon > self.min_epsilon:
+            self.epsilon = self.epsilon - self.annealing_rate
 
         return val_loss
 
