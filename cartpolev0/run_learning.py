@@ -29,6 +29,7 @@ n_out = env.action_space.n # 取れるactionの種類
 ## network param
 n_l1hidden = config['n_l1hidden']
 n_l2hidden = config['n_l2hidden']
+n_l3hidden = config['n_l3hidden']
 learning_rate_nw = config['learning_rate_nw']
 isLoadModel = config['isLoadModel']
 ## agent param
@@ -40,6 +41,7 @@ min_epsilon = config['min_epsilon']
 # 環境構築
 network = DQN(n_l1hidden=n_l1hidden,
               n_l2hidden=n_l2hidden,
+              n_l3hidden=n_l3hidden,
               n_in=n_in,
               n_out=n_out,
               learning_rate=learning_rate_nw)
@@ -59,9 +61,10 @@ organizer = Organizer(agent=agent,
 
 # 学習と推論
 val_loss_history = []
-for i in range(1000):
+train_ave, val_loss = organizer.step(isTrain=True, batch_size=200)
+for i in range(10000):
     train_ave, val_loss = organizer.step(isTrain=True, batch_size=32)
-    test_ave = organizer.step(isTrain=False, batch_size=10, isVisualize=False)
+    test_ave = organizer.step(isTrain=False, batch_size=20, isVisualize=False)
     print("i={}, val_loss={:.6f}, average_timestep=[train:{:.2f}, test:{:.2f}]".format(i, val_loss, train_ave, test_ave))
     if test_ave >= 195:
         break
@@ -88,8 +91,8 @@ p3, = ax2.plot(val_loss_history, color="b", linestyle="dashed", label="val_loss"
 plt.xticks(np.linspace(0, history_count_train, 5, endpoint=False))
 plt.legend([p1, p2, p3], ["timestep_train","timestep_test", "val_loss"])
 plt.title("cartpole_play")
-plt.show()
 
 agent.save(result_path, config_path)
-plt.savefig(result_path + "graph.png")
+plt.savefig(result_path + "graph.jpeg")
+plt.show()
 print("end")

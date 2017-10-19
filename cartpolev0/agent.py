@@ -49,10 +49,6 @@ class Agent:
         state_ary = np.array([[]])
         Q_ary = np.array([[]])
         delta_Q_ary = np.array([[]])
-        # test
-        ix = 0
-        ix_total = 0
-        # test
         for state, act, reward, forward_s, isEndRecord in result_ary:
             state = state.reshape(-1,4)
             forward_s = forward_s.reshape(-1,4)
@@ -80,11 +76,8 @@ class Agent:
                     maxev_q_idx = np.argmax(pred_q_table)
                     # Excepted Value(期待値) = 現在の報酬(reward) +
                     #                         時間割引率(gamma) * 状態forward_stateでmaxのQ値(maxev_Q)
-                    ev = reward + self.gamma * maxev_q
-                    ix_total += 1
-                    ix += np.argmax(pred_q_table)
                 ev = reward + self.gamma * maxev_q
-                # print("forward_s={}, pred_q={}, ev={},end?={}".format(forward_s,pred_q_table, ev, isEndRecord))
+                # print("state={}, forward_s={}, ev={:.3f}, maxev_q={}".format(state, forward_s, ev, q[maxev_q_idx]))
                 # Todo:ミニバッチ処理対応.(1個ずつじゃなく、いっきに学習できるようにする)
                 q = np.array([q]).reshape(-1, 2)
 
@@ -105,7 +98,6 @@ class Agent:
                     Q_ary = np.append(Q_ary, Q, axis=0)
                     delta_Q_ary = np.append(delta_Q_ary, delta_Q, axis=0)
 
-        print("test: total={}, choose_1={}".format(ix_total,ix))
         self.network.sess.run(self.network.train_step, feed_dict={
             self.network.x: state_ary,
             self.network.y: Q_ary,

@@ -3,12 +3,10 @@
   "#networkのパラメータ": "",
   "n_l1hidden": 100,
   "n_l2hidden": 100,
-  "n_l3hidden": 100,
   "learning_rate_nw": 0.00025,
-  "isLoadModel": false,
   "#agentのパラメータ:": "",
-  "gamma": 0.99,
-  "epsilon": 1,
-  "annealing_rate": 0.001,
-  "min_epsilon": 0.05
+  "gamma": 0.95,
+  "epsilon": 0.3,
+  "annealing_rate": 0.995,
+  "learning_rate_ag": 0.01
 }

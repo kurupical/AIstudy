@@ -7,7 +7,7 @@ class DQN:
     '''
     DQNのネットワークを定義
     '''
-    def __init__(self, n_l1hidden, n_l2hidden, n_in, n_out, learning_rate=0.001):
+    def __init__(self, n_l1hidden, n_l2hidden, n_l3hidden, n_in, n_out, learning_rate=0.001):
         '''
         n_in: 入力(ゲームの状態)のノード数
         n_out: 出力(Q(s,a))
@@ -15,6 +15,7 @@ class DQN:
 
         self.n_l1hidden = n_l1hidden
         self.n_l2hidden = n_l2hidden
+        self.n_l3hidden = n_l3hidden
         self.n_in = n_in
         self.n_out = n_out
         self.x = tf.placeholder(tf.float32, shape=[None, self.n_in])
@@ -55,13 +56,19 @@ class DQN:
         f2 = tf.matmul(f1_out, W2) + b2
         f2_out = self._LeakyReLU(f2)
 
-        # hidden-layer2 -> outputlayer
-        W3 = _weight_variable(shape=[self.n_l2hidden, self.n_out])
-        b3 = _bias_variable(shape=[self.n_out])
+        # hiddenlayer-2 -> hiddenlayer-3
+        W3 = _weight_variable(shape=[self.n_l2hidden, self.n_l1hidden])
+        b3 = _bias_variable(shape=[self.n_l3hidden])
         f3 = tf.matmul(f2_out, W3) + b3
+        f3_out = self._LeakyReLU(f3)
+
+        # hidden-layer3 -> outputlayer
+        W4 = _weight_variable(shape=[self.n_l3hidden, self.n_out])
+        b4 = _bias_variable(shape=[self.n_out])
+        f4 = tf.matmul(f3_out, W4) + b4
 
         # output
-        y = f3
+        y = f4
 
         return y
 
@@ -77,7 +84,7 @@ class DQN:
         train_step = optimizer.minimize(loss)
         return train_step
 
-    def _LeakyReLU(self, f, a=0.1):
+    def _LeakyReLU(self, f, a=0.2):
         return tf.maximum(f, f*a)
 
     def save(self, path):
