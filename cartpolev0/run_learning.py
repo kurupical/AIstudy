@@ -61,38 +61,43 @@ organizer = Organizer(agent=agent,
 
 # 学習と推論
 val_loss_history = []
-train_ave, val_loss = organizer.step(isTrain=True, batch_size=200)
-for i in range(10000):
-    train_ave, val_loss = organizer.step(isTrain=True, batch_size=32)
-    test_ave = organizer.step(isTrain=False, batch_size=20, isVisualize=False)
-    print("i={}, val_loss={:.6f}, average_timestep=[train:{:.2f}, test:{:.2f}]".format(i, val_loss, train_ave, test_ave))
-    if test_ave >= 195:
-        break
-    val_loss_history.append(val_loss)
+if isLoadModel:
+    test_ave = organizer.step(isTrain=False, batch_size=10, isVisualize=True)
+    print("average_timestep={}".format(test_ave))
+else:
+    train_ave, val_loss = organizer.step(isTrain=True, batch_size=200)
+    for i in range(1000):
+        train_ave, val_loss = organizer.step(isTrain=True, batch_size=32)
+        test_ave = organizer.step(isTrain=False, batch_size=20, isVisualize=False)
+        print("i={}, val_loss={:.6f}, average_timestep=[train:{:.2f}, test:{:.2f}]\n".format(i, val_loss, train_ave, test_ave))
+        if test_ave >= 195:
+            break
+        val_loss_history.append(val_loss)
 
-history_count_train = len(organizer.result_history_train)
-history_count_test = len(organizer.result_history_test)
+    history_count_train = len(organizer.result_history_train)
+    history_count_test = len(organizer.result_history_test)
 
-#
-# グラフ表示
-#  - x軸を共有して、val_lossとtimestepのグラフを同時に表示させる
-#
+    #
+    # グラフ表示
+    #  - x軸を共有して、val_lossとtimestepのグラフを同時に表示させる
+    #
 
-fig, ax1 = plt.subplots()
+    fig, ax1 = plt.subplots()
 
-ax1.set_xlabel("epochs")
-ax1.set_ylabel("timestep")
-p1, = ax1.plot(organizer.result_history_train, color="g", label="timestep_train")
-p2, = ax1.plot(organizer.result_history_test, color="r", label="timestep_test")
+    ax1.set_xlabel("epochs")
+    ax1.set_ylabel("timestep")
+    p1, = ax1.plot(organizer.result_history_train, color="g", label="timestep_train")
+    p2, = ax1.plot(organizer.result_history_test, color="r", label="timestep_test")
 
-ax2 = ax1.twinx()
-ax2.set_ylabel("val_loss")
-p3, = ax2.plot(val_loss_history, color="b", linestyle="dashed", label="val_loss")
-plt.xticks(np.linspace(0, history_count_train, 5, endpoint=False))
-plt.legend([p1, p2, p3], ["timestep_train","timestep_test", "val_loss"])
-plt.title("cartpole_play")
+    ax2 = ax1.twinx()
+    ax2.set_ylabel("val_loss")
+    p3, = ax2.plot(val_loss_history, color="b", linestyle="dashed", label="val_loss")
+    plt.xticks(np.linspace(0, history_count_train, 5, endpoint=False))
+    plt.legend([p1, p2, p3], ["timestep_train","timestep_test", "val_loss"])
+    plt.title("cartpole_play")
+    agent.save(result_path, config_path)
+    plt.savefig(result_path + "graph.png")
 
-agent.save(result_path, config_path)
-plt.savefig(result_path + "graph.jpeg")
-plt.show()
+    plt.show()
+
 print("end")

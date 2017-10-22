@@ -56,9 +56,9 @@ class Organizer:
                         forward_reward = -1
                     else: # timestep=200の場合、強制的にゲーム終了となる。この場合のrewardは0とする
 #                        print("rew=1/timestep:{}, isTrain={}".format(timestep, isTrain))
-                        forward_reward = 0.1
+                        forward_reward = 0.005
                 else:
-                    forward_reward = 0.1
+                    forward_reward = 0.005
 #                forward_reward = reward
 
                 if isTrain:
@@ -77,8 +77,8 @@ class Organizer:
             # 成績が前回平均以上のデータは記録する。
             # それ以外のデータは、一定の確率で記録する。
             if isTrain:
-            #    if self.before_ave < timestep or random.random() < 0.:
-                if self.before_ave < timestep:
+                if self.before_ave < timestep or random.random() < 0.:
+            #    if self.before_ave < timestep:
                     for ary in w_result_ary:
                         self.result_ary.append(ary)
                         insert_count += 1
@@ -107,11 +107,11 @@ class Organizer:
             random.shuffle(self.result_ary)
 
             # [batch_sizeの100倍]のデータを保持する
-            if len(self.result_ary) < 10000:
-                result_ary = self.result_ary[:32]
+            if len(self.result_ary) < 3000:
+                result_ary = self.result_ary[:300]
             else:
-                self.result_ary = self.result_ary[:10000]
-                result_ary = self.result_ary[:32]
+                self.result_ary = self.result_ary[:3000]
+                result_ary = self.result_ary[:300]
             val_loss = self.agent.learn(result_ary)
             return average_timestep, val_loss
         else:

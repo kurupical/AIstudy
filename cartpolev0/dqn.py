@@ -35,8 +35,9 @@ class DQN:
         '''
         入力層 -> 隠れ層２ -> 出力層
         '''
-        def _weight_variable(shape):
-            initial = tf.truncated_normal(shape, mean=0.0, stddev=1.0)
+        def _weight_variable(shape, seed):
+            # randomは値固定とする
+            initial = tf.truncated_normal(shape, mean=0.0, stddev=1, seed=seed)
             # initial = tf.random_uniform(shape, minval=-1, maxval=1)
             return tf.Variable(initial)
 
@@ -45,25 +46,25 @@ class DQN:
             return tf.Variable(initial)
 
         # inputlayer -> hiddenlayer-1
-        W1 = _weight_variable(shape=[self.n_in, self.n_l1hidden])
+        W1 = _weight_variable(shape=[self.n_in, self.n_l1hidden], seed=1)
         b1 = _bias_variable(shape=[self.n_l1hidden])
         f1 = tf.matmul(self.x, W1) + b1
         f1_out = self._LeakyReLU(f1)
 
         # hiddenlayer-1 -> hiddenlayer-2
-        W2 = _weight_variable(shape=[self.n_l1hidden, self.n_l2hidden])
+        W2 = _weight_variable(shape=[self.n_l1hidden, self.n_l2hidden], seed=2)
         b2 = _bias_variable(shape=[self.n_l2hidden])
         f2 = tf.matmul(f1_out, W2) + b2
         f2_out = self._LeakyReLU(f2)
 
         # hiddenlayer-2 -> hiddenlayer-3
-        W3 = _weight_variable(shape=[self.n_l2hidden, self.n_l1hidden])
+        W3 = _weight_variable(shape=[self.n_l2hidden, self.n_l3hidden], seed=3)
         b3 = _bias_variable(shape=[self.n_l3hidden])
         f3 = tf.matmul(f2_out, W3) + b3
         f3_out = self._LeakyReLU(f3)
 
         # hidden-layer3 -> outputlayer
-        W4 = _weight_variable(shape=[self.n_l3hidden, self.n_out])
+        W4 = _weight_variable(shape=[self.n_l3hidden, self.n_out], seed=4)
         b4 = _bias_variable(shape=[self.n_out])
         f4 = tf.matmul(f3_out, W4) + b4
 
@@ -73,8 +74,17 @@ class DQN:
         return y
 
     def _loss(self, y, t):
-        mse = tf.reduce_mean(tf.square(y - t))
-        return mse
+        '''
+        err = y - t
+        cond = tf.abs(err) < 1
+
+        L2 = 0.5 * tf.square(err)
+        L1 = tf.abs(err) - 0.5
+        loss = tf.where(cond, L2, L1)
+        mse = tf.reduce_mean(loss)
+        '''
+        huber = tf.losses.huber_loss(y, t)
+        return huber
 
     def _training(self, loss, learning_rate, beta1=0.9, beta2=0.999):
         #optimizer = \

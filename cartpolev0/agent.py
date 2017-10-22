@@ -49,6 +49,7 @@ class Agent:
         state_ary = np.array([[]])
         Q_ary = np.array([[]])
         delta_Q_ary = np.array([[]])
+
         for state, act, reward, forward_s, isEndRecord in result_ary:
             state = state.reshape(-1,4)
             forward_s = forward_s.reshape(-1,4)
@@ -57,6 +58,15 @@ class Agent:
             Q = self.network.y.eval(session=self.network.sess, feed_dict={
                     self.network.x: state
                 })
+
+
+            # 報酬のcliping(Q-Tableは-1〜1の値しか取らない)
+            '''
+            cond_max = (Q > 1)
+            cond_min = (Q < -1)
+            Q[cond_max] = 1
+            Q[cond_min] = -1
+            '''
 
             # ev_Qの計算
             delta_Q = np.array([[]])
@@ -77,6 +87,8 @@ class Agent:
                     # Excepted Value(期待値) = 現在の報酬(reward) +
                     #                         時間割引率(gamma) * 状態forward_stateでmaxのQ値(maxev_Q)
                 ev = reward + self.gamma * maxev_q
+
+
                 # print("state={}, forward_s={}, ev={:.3f}, maxev_q={}".format(state, forward_s, ev, q[maxev_q_idx]))
                 # Todo:ミニバッチ処理対応.(1個ずつじゃなく、いっきに学習できるようにする)
                 q = np.array([q]).reshape(-1, 2)
@@ -84,6 +96,15 @@ class Agent:
                 delta_q = q
                 delta_q[0, maxev_q_idx] = ev
                 delta_q = np.array([delta_q]).reshape(-1, 2)
+
+                '''
+                # 報酬のcliping(Q-Tableは-1〜1の値しか取らない)
+                cond_max = (delta_q > 1)
+                cond_min = (delta_q < -1)
+                delta_q[cond_max] = 1
+                delta_q[cond_min] = -1
+                '''
+
                 if delta_Q.size == 0:
                     delta_Q = copy(delta_q)
                 else:
@@ -114,6 +135,8 @@ class Agent:
         if self.epsilon > self.min_epsilon:
             self.epsilon = self.epsilon - self.annealing_rate
 
+        print("Q_ary:{}, delta_Q_ary:{}".format(Q_ary[-1:], delta_Q_ary[-1]))
+        # print("W1:{}".format(self.network.sess.run(self.network.f1)))
         return val_loss
 
     def predict(self, state):
