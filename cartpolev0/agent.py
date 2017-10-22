@@ -75,7 +75,8 @@ class Agent:
                 if isEndRecord:
                     # 最終レコードの場合は、その状態から先に行かない
                     maxev_q = 0
-                    maxev_q_idx = [0,1]
+                    # Q-Tableは0も1も更新しておく
+                    act = [0,1]
                 else:
                     # 状態forward_sに対して、すべてのactionのQ値を計算する
                     pred_q_table = self.network.y.eval(session=self.network.sess, feed_dict={
@@ -94,7 +95,8 @@ class Agent:
                 q = np.array([q]).reshape(-1, 2)
 
                 delta_q = q
-                delta_q[0, maxev_q_idx] = ev
+                # delta_q[0, maxev_q_idx] = ev
+                delta_q[0, act] = ev
                 delta_q = np.array([delta_q]).reshape(-1, 2)
 
                 '''

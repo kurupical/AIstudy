@@ -1,6 +1,7 @@
 # common lib
 import random
 import numpy as np
+import copy
 from tqdm import tqdm
 
 class Organizer:
@@ -77,7 +78,7 @@ class Organizer:
             # 成績が前回平均以上のデータは記録する。
             # それ以外のデータは、一定の確率で記録する。
             if isTrain:
-                if self.before_ave < timestep or random.random() < 0.:
+                if self.before_ave < timestep or random.random() < 0:
             #    if self.before_ave < timestep:
                     for ary in w_result_ary:
                         self.result_ary.append(ary)
@@ -94,7 +95,7 @@ class Organizer:
             self.result_history_train.append(average_timestep)
         else:
             self.result_history_test.append(average_timestep)
-        if isTrain:
+        if not isTrain:
             if self.before_ave < average_timestep:
                 self.before_ave = average_timestep
 
@@ -104,14 +105,11 @@ class Organizer:
         #
 
         if isTrain:
-            random.shuffle(self.result_ary)
-
             # [batch_sizeの100倍]のデータを保持する
-            if len(self.result_ary) < 3000:
-                result_ary = self.result_ary[:300]
-            else:
-                self.result_ary = self.result_ary[:3000]
-                result_ary = self.result_ary[:300]
+            if len(self.result_ary) > 3000:
+                self.result_ary = self.result_ary[-3000:]
+
+            result_ary = random.sample(self.result_ary, 100)
             val_loss = self.agent.learn(result_ary)
             return average_timestep, val_loss
         else:

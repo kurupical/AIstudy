@@ -69,9 +69,9 @@ else:
     for i in range(1000):
         train_ave, val_loss = organizer.step(isTrain=True, batch_size=32)
         test_ave = organizer.step(isTrain=False, batch_size=20, isVisualize=False)
-        print("i={}, val_loss={:.6f}, average_timestep=[train:{:.2f}, test:{:.2f}]\n".format(i, val_loss, train_ave, test_ave))
-        if test_ave >= 195:
-            break
+        print("i={}, val_loss={:.6f}, average_timestep=[train:{:.2f}, test:{:.2f}], epsilon={}\n".format(i, val_loss, train_ave, test_ave, agent.epsilon))
+        #if test_ave >= 195:
+        #    break
         val_loss_history.append(val_loss)
 
     history_count_train = len(organizer.result_history_train)
@@ -92,7 +92,7 @@ else:
     ax2 = ax1.twinx()
     ax2.set_ylabel("val_loss")
     p3, = ax2.plot(val_loss_history, color="b", linestyle="dashed", label="val_loss")
-    plt.xticks(np.linspace(0, history_count_train, 5, endpoint=False))
+    plt.xticks(np.linspace(0, history_count_train-1, 5, endpoint=False))
     plt.legend([p1, p2, p3], ["timestep_train","timestep_test", "val_loss"])
     plt.title("cartpole_play")
     agent.save(result_path, config_path)

@@ -37,7 +37,7 @@ class DQN:
         '''
         def _weight_variable(shape, seed):
             # randomは値固定とする
-            initial = tf.truncated_normal(shape, mean=0.0, stddev=1, seed=seed)
+            initial = tf.truncated_normal(shape, mean=0.0, stddev=0.1, seed=seed)
             # initial = tf.random_uniform(shape, minval=-1, maxval=1)
             return tf.Variable(initial)
 
@@ -74,7 +74,15 @@ class DQN:
         return y
 
     def _loss(self, y, t):
+
         '''
+        # 誤差二乗和
+        mse = tf.reduce_mean(tf.square(y - t))
+        return mse
+        '''
+
+        '''
+        # Huber関数(ベタ書き)
         err = y - t
         cond = tf.abs(err) < 1
 
@@ -82,7 +90,9 @@ class DQN:
         L1 = tf.abs(err) - 0.5
         loss = tf.where(cond, L2, L1)
         mse = tf.reduce_mean(loss)
+        return mse
         '''
+        # Huber関数(tensorflow)
         huber = tf.losses.huber_loss(y, t)
         return huber
 

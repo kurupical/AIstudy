@@ -9,6 +9,6 @@
   "#agentのパラメータ:": "",
   "gamma": 0.99,
   "epsilon": 1,
-  "annealing_rate": 0.001,
+  "annealing_rate": 0.003,
   "min_epsilon": 0.05
 }
